@@ -60,6 +60,9 @@ n_pade = 20
 ( num_pade , den_pade ) = ctrl.pade ( theta , n_pade )
 H_pade = ctrl.TransferFunction( num_pade , den_pade )
 
+# Função de transferência do sistema com atraso
+sys_atraso = ctrl.series(sys, H_pade)
+
 # Modelo CHR com 20% de sobrevalor
 
 Kp = 0.95 * tau / (k * theta)
@@ -70,12 +73,7 @@ Td = 0.4730 * theta
 num_pid = [Kp * Td, Kp, Kp / Ti]
 den_pid = [1, 0]
 PID = ctrl.TransferFunction(num_pid, den_pid)
-
-# Função de transferência do sistema com atraso
-sys_atraso = ctrl.series(sys, H_pade)
-
-# Série de PID e sistema com atraso
-Cs = ctrl.series(PID, sys_atraso)
+Cs = ctrl.series(PID, sys_atraso) # Série de PID e sistema com atraso
 
 # Plotar a resposta ao degrau da malha fechada
 plt.figure()
@@ -93,13 +91,11 @@ Kpc = (tau / (k * theta)) * ((16 * tau + 30) / (12 * tau))
 Tic = theta * ((32 + 6 * theta / tau) / (13 + (8 * theta / tau)))
 Tdc = 4 * theta / (11 + 2 * theta / tau)
 
-# Criar a função de transferência do controlador PID
-num_pidc = [Kpc * Tdc, Kpc * (1 + 0.5 * theta / tau), Kpc * theta / (2 * tau)]
+# Criar a função de transferência do controlador PID usando o metodo Cohen Coon
+num_pidc = [Kpc * Tdc, Kpc * (1 + 0.5 * theta / tau), Kpc * theta / (2 * tau)] 
 den_pidc = [1, 0]
 PIDc = ctrl.TransferFunction(num_pidc, den_pidc)
-
-# Série de PID e sistema com atraso
-Csc = ctrl.series(PIDc, sys_atraso)
+Csc = ctrl.series(PIDc, sys_atraso) # Série de PID e sistema com atraso
 
 # Plotar a resposta ao degrau da malha fechada
 plt.figure()
