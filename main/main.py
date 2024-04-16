@@ -6,8 +6,49 @@ import sys
 sys.path.append('identificacao')  # Adiciona o diretório 'funcoes' ao caminho de busca
 from Smith import Smith
 from Sundaresan import Sundaresan
+import tkinter as tk
+from tkinter import ttk
 # Carrega o dataset 
 mat=loadmat('dataset/Dataset_Grupo4.mat')
+
+# Função chamada quando o botão é pressionado
+def atualizar():
+    Kp = float(entry_kp.get())
+    Ti = float(entry_ti.get())
+    Td = float(entry_td.get())
+    
+    # Calcular a resposta ao degrau
+    calcular_resposta(Kp, Ti, Td)
+    
+# Criar a janela principal
+root = tk.Tk()
+root.title("Controle PID")
+
+# Criar os campos de entrada e etiquetas para Kp, Ti e Td
+label_kp = ttk.Label(root, text="Kp:")
+label_kp.grid(row=0, column=0, padx=5, pady=5)
+entry_kp = ttk.Entry(root)
+entry_kp.grid(row=0, column=1, padx=5, pady=5)
+entry_kp.insert(0, "1.0")  # Valor padrão
+
+label_ti = ttk.Label(root, text="Ti:")
+label_ti.grid(row=1, column=0, padx=5, pady=5)
+entry_ti = ttk.Entry(root)
+entry_ti.grid(row=1, column=1, padx=5, pady=5)
+entry_ti.insert(0, "1.0")  # Valor padrão
+
+label_td = ttk.Label(root, text="Td:")
+label_td.grid(row=2, column=0, padx=5, pady=5)
+entry_td = ttk.Entry(root)
+entry_td.grid(row=2, column=1, padx=5, pady=5)
+entry_td.insert(0, "1.0")  # Valor padrão
+
+# Botão para calcular e atualizar a resposta ao degrau
+button_atualizar = ttk.Button(root, text="Atualizar", command=atualizar)
+button_atualizar.grid(row=3, column=0, columnspan=2, padx=5, pady=5)
+
+# Mostrar a janela
+root.mainloop()
 
 # Variáveis
 struct_degrau = mat.get('TARGET_DATA____ProjetoC213_Degrau')
@@ -56,7 +97,7 @@ print("valor de k:", k, tau, theta)
 # Criar o sistema de controle
 sys = ctrl.TransferFunction([k], [tau, 1])
 
-n_pade = 20
+n_pade = 6
 ( num_pade , den_pade ) = ctrl.pade ( theta , n_pade )
 H_pade = ctrl.TransferFunction( num_pade , den_pade )
 
@@ -108,3 +149,42 @@ plt.legend(loc='lower right')
 plt.grid(True)
 
 plt.show()
+
+# Função chamada quando o botão é pressionado
+def atualizar():
+    Kp = float(entry_kp.get())
+    Ti = float(entry_ti.get())
+    Td = float(entry_td.get())
+    
+    # Calcular a resposta ao degrau
+    calcular_resposta(Kp, Ti, Td)
+    
+# Criar a janela principal
+root = tk.Tk()
+root.title("Controle PID")
+
+# Criar os campos de entrada e etiquetas para Kp, Ti e Td
+label_kp = ttk.Label(root, text="Kp:")
+label_kp.grid(row=0, column=0, padx=5, pady=5)
+entry_kp = ttk.Entry(root)
+entry_kp.grid(row=0, column=1, padx=5, pady=5)
+entry_kp.insert(0, "1.0")  # Valor padrão
+
+label_ti = ttk.Label(root, text="Ti:")
+label_ti.grid(row=1, column=0, padx=5, pady=5)
+entry_ti = ttk.Entry(root)
+entry_ti.grid(row=1, column=1, padx=5, pady=5)
+entry_ti.insert(0, "1.0")  # Valor padrão
+
+label_td = ttk.Label(root, text="Td:")
+label_td.grid(row=2, column=0, padx=5, pady=5)
+entry_td = ttk.Entry(root)
+entry_td.grid(row=2, column=1, padx=5, pady=5)
+entry_td.insert(0, "1.0")  # Valor padrão
+
+# Botão para calcular e atualizar a resposta ao degrau
+button_atualizar = ttk.Button(root, text="Atualizar", command=atualizar)
+button_atualizar.grid(row=3, column=0, columnspan=2, padx=5, pady=5)
+
+# Mostrar a janela
+root.mainloop()
