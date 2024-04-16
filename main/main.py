@@ -2,74 +2,63 @@ from scipy.io import loadmat
 import numpy as np
 import matplotlib.pyplot as plt
 import control as ctrl
+import sys
+sys.path.append('identificacao')  # Adiciona o diretório 'funcoes' ao caminho de busca
+from Smith import Smith
+from Sundaresan import Sundaresan
+# Carrega o dataset 
 mat=loadmat('dataset/Dataset_Grupo4.mat')
 
-#Variáveis
+# Variáveis
 struct_degrau = mat.get('TARGET_DATA____ProjetoC213_Degrau')
-degrau=struct_degrau[1] #vetor linha
-tempo=struct_degrau[0]#vetor linha
-struct_saida=mat.get('TARGET_DATA____ProjetoC213_Saida')
-saida=struct_saida[1,:]#vetor linha
+degrau = struct_degrau[1].tolist()  # Converte para lista
+tempo = struct_degrau[0].tolist()  # Converte para lista
+struct_saida = mat.get('TARGET_DATA____ProjetoC213_Saida')
+saida = struct_saida[1, :].tolist()  # Converte para lista
 
 # Plotagem do grafico 
 plot1=plt.plot(tempo,saida, label='Saída')
 plot2=plt.plot(tempo,degrau,label='degrau de entrada')
 plt.xlabel ( ' t [ s ] ')
 plt.ylabel('Amplitude')
-plt.legend(loc="upper left")
+plt.legend(loc='lower right')
 
-#plt.grid ()
-#plt.show()
+AmplitudeDegrau = np.mean(degrau)
+valorInicial = saida[0]
 
-# Usando o teorema do valor final, calculamos o valor de K
-ValorFinal = saida[-1]
-AmplitudeDegrau = degrau[-1]
-k = ValorFinal/AmplitudeDegrau
+# Obtendo parametros da função Smith
+smith = Smith(np.mean(degrau), tempo, saida)
+sys_smith = ctrl.TransferFunction([smith[0], 1], [smith[1], 1])
+t, y = ctrl.step_response(sys_smith * AmplitudeDegrau, tempo)
+saida_smith = y +  valorInicial
+erro_smith = np.sqrt(np.mean((saida - saida_smith)**2))
 
-print("valor de k:", k)
+# Obtendo parametros da função Sundaresan
+sundaresan = Sundaresan(np.mean(degrau), tempo, saida)
+sys_sundaresan = ctrl.TransferFunction([sundaresan[0], 1], [sundaresan[1], 1])
+t, y = ctrl.step_response(sys_sundaresan * AmplitudeDegrau, tempo)
+saida_sundaresan = y +  valorInicial
+erro_sundaresan = np.sqrt(np.mean((saida - saida_sundaresan)**2))
 
-# Calculando o atraso
-theta = 0
-tau = 0
-for i in range(len(saida)):
-    if saida[i] != 0 and theta == 0:
-        theta = tempo[i - 1]
-    
-    if saida[i] >= (0.9821 * ValorFinal):
-        tau = (tempo[i] - theta) / 4
-        break
+if erro_smith < erro_sundaresan:
+    k = smith[0]
+    tau = smith[1]
+    theta = smith[2]
 
-print("valor do atraso de transporte:", theta)
-print("valor da constante de tempo:", tau)
+else :
+    k = sundaresan[0]
+    tau = sundaresan[1]
+    theta = sundaresan[2]
+   
+
+print("valor de k:", k, tau, theta)
 
 # Criar o sistema de controle
 sys = ctrl.TransferFunction([k], [tau, 1])
 
-
-# Definir o atraso de entrada no sistema
-num, den = ctrl.pade(theta, 1)
-sys_atraso = ctrl.TransferFunction(num, den) * sys
-
-
-# Gerar a resposta ao degrau do sistema com atraso
-tempo_resposta, resposta = ctrl.step_response(sys_atraso*AmplitudeDegrau)
-
-# Plotar a resposta ao degrau
-plt.figure()
-plt.plot(tempo_resposta, resposta)
-
-# Plotar os dados reais
-plt.plot(tempo, saida, 'r--')
-
-# Configurações do gráfico
-plt.xlabel('tempo')
-plt.ylabel('saida [°C]')
-plt.legend(['Identificação', 'Real'], loc='upper right')
-plt.title('Dados Reais vs Identificação')
-plt.grid(True)
-
-# Salvar o gráfico como PNG
-#plt.savefig('RealXIdentificacao.png')
+n_pade = 20
+( num_pade , den_pade ) = ctrl.pade ( theta , n_pade )
+H_pade = ctrl.TransferFunction( num_pade , den_pade )
 
 # Modelo CHR com 20% de sobrevalor
 
@@ -77,25 +66,49 @@ Kp = 0.95 * tau / (k * theta)
 Ti = 1.357 * tau
 Td = 0.4730 * theta
 
-# Criando o controlador PID
-num_pid = [Kp*Td, Kp, Kp/Ti]
+# Criar a função de transferência do controlador PID
+num_pid = [Kp * Td, Kp, Kp / Ti]
 den_pid = [1, 0]
 PID = ctrl.TransferFunction(num_pid, den_pid)
 
-# Criando o sistema em série
+# Função de transferência do sistema com atraso
+sys_atraso = ctrl.series(sys, H_pade)
+
+# Série de PID e sistema com atraso
 Cs = ctrl.series(PID, sys_atraso)
 
-#plots
-t = np . linspace (0 , 40 , 100)
-# Plotando a resposta ao degrau do sistema em malha fechada
+# Plotar a resposta ao degrau da malha fechada
 plt.figure()
-ctrl.step_response(ctrl.feedback(Cs, 1))
-plt.grid(True)
+t, y = ctrl.step_response(ctrl.feedback(Cs, 1))
+plt.plot(t, y, label = 'CHR20%')
 plt.xlabel('Tempo')
-plt.ylabel('Resposta ao Degrau')
-plt.title('Resposta ao Degrau do Sistema em Malha Fechada')
+plt.ylabel('Amplitude')
+plt.title('Resposta ao degrau da malha fechada')
+plt.legend(loc='lower right')
+plt.grid(True)
 
-# Exibindo o gráfico
-#plt.show()
+# Modelo Cohen e Coon
 
-print (Cs, PID, Kp, Ti, Td)
+Kpc = (tau / (k * theta)) * ((16 * tau + 30) / (12 * tau))
+Tic = theta * ((32 + 6 * theta / tau) / (13 + (8 * theta / tau)))
+Tdc = 4 * theta / (11 + 2 * theta / tau)
+
+# Criar a função de transferência do controlador PID
+num_pidc = [Kpc * Tdc, Kpc * (1 + 0.5 * theta / tau), Kpc * theta / (2 * tau)]
+den_pidc = [1, 0]
+PIDc = ctrl.TransferFunction(num_pidc, den_pidc)
+
+# Série de PID e sistema com atraso
+Csc = ctrl.series(PIDc, sys_atraso)
+
+# Plotar a resposta ao degrau da malha fechada
+plt.figure()
+t_cc, y_cc = ctrl.step_response(ctrl.feedback(Csc, 1))
+plot2 = plt.plot(t_cc, y_cc, label='Cohen-Coon')
+plt.xlabel('Tempo')
+plt.ylabel('Amplitude')
+plt.title('Resposta ao degrau da malha fechada')
+plt.legend(loc='lower right')
+plt.grid(True)
+
+plt.show()
