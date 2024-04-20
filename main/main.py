@@ -8,7 +8,7 @@ from Smith import Smith
 from Sundaresan import Sundaresan
 import sys
 sys.path.append('funcoes')  # Adiciona o diretório 'funcoes' ao caminho de busca
-from Funcoes import Pid, CHR20, CohenCoon
+from Funcoes import Pid, CHR20, CohenCoon, Calc_Param
 import tkinter as tk
 from tkinter import ttk
 # Carrega o dataset 
@@ -100,30 +100,6 @@ plt.legend(loc='lower right')
 plt.grid(True)
 
 plt.show()
-
-# Função para calcular a resposta ao degrau
-def calcular_resposta(Kp, Ti, Td):
-    PID = Pid(Kp, Ti, Td)
-    Cs = ctrl.series(PID, sys_atraso) # Série de PID e sistema com atraso
-    plt.figure()
-    t, y = ctrl.step_response(ctrl.feedback(Cs, 1))
-    plt.plot(t, y, label = 'Ajuste fino')
-    plt.xlabel('Tempo')
-    plt.ylabel('Amplitude')
-    plt.title('Resposta ao degrau da malha fechada Kp, Ti, Td adicionados pelo usuario')
-    plt.legend(loc='lower right')
-    plt.grid(True)
-    plt.show()
-    pass
-
-# Função chamada quando o botão é pressionado
-def atualizar():
-    Kp = float(entry_kp.get())
-    Ti = float(entry_ti.get())
-    Td = float(entry_td.get())
-    
-    # Calcular a resposta ao degrau
-    calcular_resposta(Kp, Ti, Td)
     
 # Criar a janela principal
 root = tk.Tk()
@@ -144,28 +120,63 @@ y_pos = altura_tela // 2 - altura_janela // 2
 # Definir a geometria da janela
 root.geometry(f'{largura_janela}x{altura_janela}+{x_pos}+{y_pos}')
 
-# Criar os campos de entrada e etiquetas para Kp, Ti e Td
-label_kp = ttk.Label(root, text="Kp:")
-label_kp.grid(row=0, column=0, padx=5, pady=5)
-entry_kp = ttk.Entry(root)
-entry_kp.grid(row=0, column=1, padx=5, pady=5)
-entry_kp.insert(0, "1.0")  # Valor padrão
 
-label_ti = ttk.Label(root, text="Ti:")
-label_ti.grid(row=1, column=0, padx=5, pady=5)
-entry_ti = ttk.Entry(root)
-entry_ti.grid(row=1, column=1, padx=5, pady=5)
-entry_ti.insert(0, "1.0")  # Valor padrão
-
-label_td = ttk.Label(root, text="Td:")
-label_td.grid(row=2, column=0, padx=5, pady=5)
-entry_td = ttk.Entry(root)
-entry_td.grid(row=2, column=1, padx=5, pady=5)
-entry_td.insert(0, "1.0")  # Valor padrão
 
 # Botão para calcular e atualizar a resposta ao degrau
-button_atualizar = ttk.Button(root, text="Atualizar", command=atualizar)
-button_atualizar.grid(row=3, column=0, columnspan=2, padx=5, pady=5)
+label_kp = ttk.Label(root, text="Kp:")
+label_kp.grid(row=0, column=1, padx=5, pady=5)
+entry_kp = tk.Entry(root)
+entry_kp.grid(row=0, column=2)
+
+entry_ti = tk.Entry(root)
+label_kp = ttk.Label(root, text="Ti:")
+label_kp.grid(row=1, column=1, padx=5, pady=5)
+entry_ti.grid(row=1, column=2)
+
+entry_td = tk.Entry(root)
+label_kp = ttk.Label(root, text="Td:")
+label_kp.grid(row=2, column=1, padx=5, pady=5)
+entry_td.grid(row=2, column=2)
+
+def calcular_resposta(Kp, Ti, Td):
+    PID = Pid(Kp, Ti, Td)
+    Cs = ctrl.series(PID, sys_atraso) # Série de PID e sistema com atraso
+    t, y = ctrl.step_response(ctrl.feedback(Cs, 1))
+    return t, y
+
+def atualizar(Kp, Ti, Td):
+    t, y = calcular_resposta(Kp, Ti, Td)
+    # Calcular parâmetros para o método CHR20
+    saida_chr20 = Calc_Param(t, y)
+    print("Parâmetros para CHR20:")
+    print("Máximo Pico:", saida_chr20[0])
+    print("Amplitude Total:", saida_chr20[1])
+    print("Tempo de Resposta:", saida_chr20[2])
+    
+    # Calcular parâmetros para o método CohenCoon
+    saida_cohen_coon = Calc_Param(t, y)  # Seu código para calcular os parâmetros do CohenCoon aqui
+    print("\nParâmetros para CohenCoon:")
+    print("Máximo Pico:", saida_cohen_coon[0])
+    print("Amplitude Total:", saida_cohen_coon[1])
+    print("Tempo de Resposta:", saida_cohen_coon[2])
+
+def atualizar_com_valores():
+    # Obter valores de Kp, Ti e Td dos Entry widgets
+    Kp = float(entry_kp.get())
+    Ti = float(entry_ti.get())
+    Td = float(entry_td.get())
+    # Chamar atualizar() com os valores obtidos
+    atualizar(Kp, Ti, Td)
+
+# Botão CHR20
+button_chr20 = ttk.Button(root, text="CHR20", command=atualizar_com_valores)
+button_chr20.grid(row=0, column=0, padx=5, pady=5)
+
+# Botão CohenCoon
+button_cohen_coon = ttk.Button(root, text="CohenCoon", command=atualizar_com_valores)
+button_cohen_coon.grid(row=1, column=0, padx=5, pady=5)
+
+
 
 # Mostrar a janela
 root.mainloop()
