@@ -72,6 +72,7 @@ chr = CHR20 (theta, tau, k)
 PID = Pid (chr[0], chr[1], chr[2])
 Cs = ctrl.series(PID, sys_atraso) # Série de PID e sistema com atraso
 
+
 # Plotar a resposta ao degrau da malha fechada
 plt.figure()
 t, y = ctrl.step_response(ctrl.feedback(Cs, 1))
@@ -81,6 +82,13 @@ plt.ylabel('Amplitude')
 plt.title('Resposta ao degrau da malha fechada')
 plt.legend(loc='lower right')
 plt.grid(True)
+
+infoschr = Calc_Param(t, y)
+
+print("Parametros para metodo CHR20%")
+print("Máximo de pico", infoschr[0])
+print("Amplitude total", infoschr[1])
+print("Tempo de resposta", infoschr[2])
 
 # Modelo Cohen e Coon
 cohenCoon = CohenCoon(theta, tau, k)
@@ -98,6 +106,13 @@ plt.ylabel('Amplitude')
 plt.title('Resposta ao degrau da malha fechada')
 plt.legend(loc='lower right')
 plt.grid(True)
+
+infosCc = Calc_Param(t, y)
+
+print("\nParametros para metodo Cohen Coon")
+print("Máximo de pico", infosCc[0])
+print("Amplitude total", infosCc[1])
+print("Tempo de resposta", infosCc[2])
 
 plt.show()
     
