@@ -138,18 +138,18 @@ root.geometry(f'{largura_janela}x{altura_janela}+{x_pos}+{y_pos}')
 
 
 # Botão para calcular e atualizar a resposta ao degrau
-label_kp = ttk.Label(root, text="Kp:")
+label_kp = ttk.Label(root, text="K:")
 label_kp.grid(row=0, column=1, padx=5, pady=5)
 entry_kp = tk.Entry(root)
 entry_kp.grid(row=0, column=2)
 
 entry_ti = tk.Entry(root)
-label_kp = ttk.Label(root, text="Ti:")
+label_kp = ttk.Label(root, text="Theta:")
 label_kp.grid(row=1, column=1, padx=5, pady=5)
 entry_ti.grid(row=1, column=2)
 
 entry_td = tk.Entry(root)
-label_kp = ttk.Label(root, text="Td:")
+label_kp = ttk.Label(root, text="Tau:")
 label_kp.grid(row=2, column=1, padx=5, pady=5)
 entry_td.grid(row=2, column=2)
 
@@ -159,14 +159,19 @@ def calcular_resposta(Kp, Ti, Td):
     t, y = ctrl.step_response(ctrl.feedback(Cs, 1))
     return t, y
 
-def atualizar(Kp, Ti, Td):
-    t, y = calcular_resposta(Kp, Ti, Td)
+def atualizarCHR(theta, tau, k):
+    chr = CHR20 (theta, tau, k)
+    t, y = calcular_resposta(chr[0], chr[1], chr[2])
     # Calcular parâmetros para o método CHR20
     saida_chr20 = Calc_Param(t, y)
-    print("Parâmetros para CHR20:")
+    print("\nParâmetros para CHR20:")
     print("Máximo Pico:", saida_chr20[0])
     print("Amplitude Total:", saida_chr20[1])
     print("Tempo de Resposta:", saida_chr20[2])
+
+def atualizarCc(theta, tau, k):
+    cohenCoon = CohenCoon(theta, tau, k)
+    t, y = calcular_resposta(cohenCoon[0], cohenCoon[1], cohenCoon[2])    
     
     # Calcular parâmetros para o método CohenCoon
     saida_cohen_coon = Calc_Param(t, y)  # Seu código para calcular os parâmetros do CohenCoon aqui
@@ -175,20 +180,28 @@ def atualizar(Kp, Ti, Td):
     print("Amplitude Total:", saida_cohen_coon[1])
     print("Tempo de Resposta:", saida_cohen_coon[2])
 
-def atualizar_com_valores():
+def atualizar_com_valoresCHR():
     # Obter valores de Kp, Ti e Td dos Entry widgets
-    Kp = float(entry_kp.get())
-    Ti = float(entry_ti.get())
-    Td = float(entry_td.get())
+    K = float(entry_kp.get())
+    Theta = float(entry_ti.get())
+    Tau = float(entry_td.get())
     # Chamar atualizar() com os valores obtidos
-    atualizar(Kp, Ti, Td)
+    atualizarCHR(K, Theta, Tau)
+
+def atualizar_com_valoresCc():
+    # Obter valores de Kp, Ti e Td dos Entry widgets
+    K = float(entry_kp.get())
+    Theta = float(entry_ti.get())
+    Tau = float(entry_td.get())
+    # Chamar atualizar() com os valores obtidos
+    atualizarCc(K, Theta, Tau)
 
 # Botão CHR20
-button_chr20 = ttk.Button(root, text="CHR20", command=atualizar_com_valores)
+button_chr20 = ttk.Button(root, text="CHR20", command=atualizar_com_valoresCHR)
 button_chr20.grid(row=0, column=0, padx=5, pady=5)
 
 # Botão CohenCoon
-button_cohen_coon = ttk.Button(root, text="CohenCoon", command=atualizar_com_valores)
+button_cohen_coon = ttk.Button(root, text="CohenCoon", command=atualizar_com_valoresCc)
 button_cohen_coon.grid(row=1, column=0, padx=5, pady=5)
 
 
