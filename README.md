@@ -50,7 +50,7 @@ E nisso é plotado o grafico saida e degrau pelo tempo.
 
 ## Interface grafica
 - Cria uma janela principal usando Tkinter.
-- Adiciona campos de entrada (Entry) para os valores de Kp, Ti, e Td.
+- Adiciona campos de entrada (Entry) para os valores de k, theta, e tal.
 - Cria botões para os métodos CHR20 e CohenCoon.
 
 ## Funções de Atualização e Cálculo:
