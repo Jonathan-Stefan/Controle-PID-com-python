@@ -138,20 +138,20 @@ root.geometry(f'{largura_janela}x{altura_janela}+{x_pos}+{y_pos}')
 
 
 # Botão para calcular e atualizar a resposta ao degrau
-label_kp = ttk.Label(root, text="K:")
-label_kp.grid(row=0, column=1, padx=5, pady=5)
-entry_kp = tk.Entry(root)
-entry_kp.grid(row=0, column=2)
+label_k = ttk.Label(root, text="K:")
+label_k.grid(row=0, column=1, padx=5, pady=5)
+entry_k = tk.Entry(root)
+entry_k.grid(row=0, column=2)
 
-entry_ti = tk.Entry(root)
-label_kp = ttk.Label(root, text="Theta:")
-label_kp.grid(row=1, column=1, padx=5, pady=5)
-entry_ti.grid(row=1, column=2)
+entry_theta = tk.Entry(root)
+label_theta = ttk.Label(root, text="Theta:")
+label_theta.grid(row=1, column=1, padx=5, pady=5)
+entry_theta.grid(row=1, column=2)
 
-entry_td = tk.Entry(root)
-label_kp = ttk.Label(root, text="Tau:")
-label_kp.grid(row=2, column=1, padx=5, pady=5)
-entry_td.grid(row=2, column=2)
+entry_tau = tk.Entry(root)
+label_tau = ttk.Label(root, text="Tau:")
+label_tau.grid(row=2, column=1, padx=5, pady=5)
+entry_tau.grid(row=2, column=2)
 
 def calcular_resposta(Kp, Ti, Td):
     PID = Pid(Kp, Ti, Td)
